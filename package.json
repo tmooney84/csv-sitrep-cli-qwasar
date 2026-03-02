@@ -1,0 +1,28 @@
+{
+  "name": "csv-sitrep-cli-qwasar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmooney84/csv-sitrep-cli-qwasar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tmooney84/csv-sitrep-cli-qwasar/issues"
+  },
+  "homepage": "https://github.com/tmooney84/csv-sitrep-cli-qwasar#readme",
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "csv-parser": "^3.2.0"
+  }
+}
