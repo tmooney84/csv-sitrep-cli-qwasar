@@ -7,7 +7,7 @@ import fs from 'fs';
 // "Vortex-X Axial Fan","VX-990","High-flow cooling unit",89.50,12,1074.00
 
 type RowData = {
-  OrderID: string; 
+  OrderID: string;
   TimeStamp: Date;
   Name: string;
   ItemID: string;
@@ -48,25 +48,25 @@ async function csvConverter(fileName: string): Promise<RowData[]> {
 // top 3 products by revenue  (IS THIS BASED OFF OF REVENUE???) ratio of revenue and # sold per product?
 
 function csvSummary(data: RowData[]) {
-        try {
-          const rowCount: number = data.length;
-          let totalRevenue: number = 0;
-          for (let i: number = 0; i < data.length; i++) {
-            totalRevenue += Number(data[i].Revenue);
-          }
-          const averageOrderValue: number = totalRevenue / rowCount;
+  try {
+    const rowCount: number = data.length;
+    let totalRevenue: number = 0;
+    for (let i: number = 0; i < data.length; i++) {
+      totalRevenue += Number(data[i].Revenue);
+    }
+    const averageOrderValue: number = totalRevenue / rowCount;
 
-          console.log("Row Count: ", rowCount);
-          console.log("Total Revenue: ", totalRevenue);
-          console.log("Row Average Order Value: ", averageOrderValue);
-          console.log("Top 3 Products by Revenue: ", data.sort((a, b) => b.Revenue - a.Revenue).slice(0, 3));
-        }
-        catch {
+    console.log("Row Count: ", rowCount);
+    console.log("Total Revenue: ", totalRevenue);
+    console.log("Row Average Order Value: ", averageOrderValue);
+    console.log("Top 3 Products by Revenue: ", data.sort((a, b) => b.Revenue - a.Revenue).slice(0, 3));
+  }
+  catch {
 
-        }
-        finally {
+  }
+  finally {
 
-        }
+  }
 }
 
 // csv-sitrep validate <file.csv> validates schema and prints errors with line numbers
@@ -85,63 +85,60 @@ function buildReport(data: RowData[]) {
 }
 
 async function runCli() {
-        let data: RowData[] = [];
-        const rl = readline.createInterface({ input, output });
+  let data: RowData[] = [];
+  const rl = readline.createInterface({ input, output });
 
-        console.log('\x1b[36m--- CSV-TO-JSON-REPORTS APPLICATION ---\x1b[0m');
+  console.log('\x1b[36m--- CSV-TO-JSON-REPORTS APPLICATION ---\x1b[0m');
 
-        const fileName = await rl.question('Enter CSV filename: ');
+  const fileName = await rl.question('Enter CSV filename: ');
 
-        try {
-          data = await csvConverter(fileName);
-          console.log('Parsed List:', data);
-        } catch (err) {
-          console.error('CSV file conversion failed.', err);
-        }
+  try {
+    data = await csvConverter(fileName);
+    console.log('Parsed List:', data);
+  } catch (err) {
+    console.error('CSV file conversion failed.', err);
+  }
 
-        console.log(`Choose from the following options to manipulate the CSV file:
-          1) Summary of CSV file
-          2) Validate CSV file
-          3) Build Report of CSV file`);
 
-        let status: string = await rl.question('Enter 1, 2, 3 or \"exit\" to exit: ');
-        let cleanStatus: string = status.trim().toLowerCase();
+  let status: string = await rl.question('Enter 1, 2, 3 or \"exit\" to exit: ');
+  let cleanStatus: string = status.trim().toLowerCase();
 
-        while (true) {
-          //if 1
-          if (cleanStatus === "1") {
+  let keepRunning: boolean = true;
+
+  while (keepRunning) {
+    console.log(`\nOptions: 
+  1: Summary
+  2: Validate
+  3: Build Report
+  exit: Close Program`);
+
+        const answer = await rl.question('\nSelection: ');
+        const choice = answer.trim().toLowerCase();
+
+        switch(choice){
+          case "1":
             csvSummary(data);
             console.log("running csvSummary");
             break;
-          }
-
-          //else if 2
-          else if (cleanStatus === "2") {
+          case "2":
             csvValidate(data);
             console.log("running csvValidate");
             break;
-          }
-
-          //else if 3
-          else if (cleanStatus === "3") {
+          case "3":
             buildReport(data);
             console.log("running buildReport");
             break;
-          }
-
-          else if(cleanStatus === "exit")
-          {
+          case "exit":
+            keepRunning = false;
             break;
-          }
+          default:
+            console.log("Invalid option. Please try again.");
+        }
+  }
 
-          else{
-            status = rl.question('Incorrect Input. Please enter 1, 2, or 3: ');
-            cleanStatus = status.trim().toLowerCase();
-          }
+  console.log("Goodbye!");
 
-      }
-     
-    rl.close();
+  rl.close();
 }
 
 runCli();
