@@ -18,21 +18,27 @@ type RowData = {
 };
 
 async function csvConverter(fileName: string): Promise<RowData[]> {
-  let results: RowData[] = [];
+  const results: RowData[] = [];
 
-  // Add the parentheses and the arrow here:
-  return new Promise((resolve, reject) => { 
+  return new Promise((resolve, reject) => {
     fs.createReadStream(fileName)
-      .pipe(csvParser()) // separator: ',' is the default, so {} is optional
-      .on('data', (row: RowData) => {
+      .pipe(csvParser())
+      // Use 'any' for the raw incoming row because it's just raw strings
+      .on('data', (data: any) => {
+        const row: RowData = {
+          OrderID: data.ID,
+          TimeStamp: new Date(data.Date), // Parsing the ISO string to Date object
+          Name: data.Name,
+          ItemID: data['Item ID'], // Use bracket notation for keys with spaces
+          Desc: data.Desc,
+          Price: parseFloat(data.Price),
+          Sold: parseInt(data['Number Sold'], 10),
+          Revenue: parseFloat(data.Revenue)
+        };
         results.push(row);
       })
-      .on('end', () => {
-        resolve(results);
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
+      .on('end', () => resolve(results))
+      .on('error', (error) => reject(error));
   });
 }
 

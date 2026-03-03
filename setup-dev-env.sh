@@ -38,29 +38,29 @@ if [ ! -f tsconfig.json ]; then
   npx tsc --init
 fi
 
-echo "Configuring tsconfig for modern Node..."
-cat > tsconfig.json <<EOL
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "types": ["node"]
-  }
-}
-EOL
+# echo "Configuring tsconfig for modern Node..."
+# cat > tsconfig.json <<EOL
+# {
+#   "compilerOptions": {
+#     "target": "ES2022",
+#     "module": "NodeNext",
+#     "moduleResolution": "NodeNext",
+#     "strict": true,
+#     "esModuleInterop": true,
+#     "skipLibCheck": true,
+#     "outDir": "./dist",
+#     "rootDir": "./src",
+#     "types": ["node"]
+#   }
+# }
+# EOL
 
 mkdir -p src
 
 echo "Setup complete!"
 echo ""
 echo "To run TypeScript directly:"
-echo "  npx ts-node src/index.ts"
+echo "  npx ts-node src/csv-to-json-report.ts"
 echo ""
 echo "To compile:"
 echo "  npx tsc"
