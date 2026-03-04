@@ -99,10 +99,6 @@ async function runCli() {
     console.error('CSV file conversion failed.', err);
   }
 
-
-  let status: string = await rl.question('Enter 1, 2, 3 or \"exit\" to exit: ');
-  let cleanStatus: string = status.trim().toLowerCase();
-
   let keepRunning: boolean = true;
 
   while (keepRunning) {
