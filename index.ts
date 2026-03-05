@@ -72,13 +72,13 @@ function csvSummary(data: RowData[]) {
 
 function csvValidate(data: RowData[]) {
   // check if 8 csv values
-  const isAnyNull = Object.values(data).some(value => value === null || value === undefined || value === "");
-  console.log(isAnyNull);
-
-  if (isAnyNull) {
-    console.error("Found a missing value!");
-    return;
-  }
+  data.forEach((row, index) => {
+      const isAnyNull = Object.values(row).some(value => value === null || value === undefined || value === "");
+      if (isAnyNull) {
+        console.error("Found a missing value at index " + index + "!");
+        return;
+      }
+  });
 
   // csv[0] check that it starts with "UID-" and next 3 have to be between ("0" and "9")
   for (let i = 0; i < data.length; i++) {
@@ -95,8 +95,10 @@ function csvValidate(data: RowData[]) {
         }
       }
     }
-    if (isNaN(data[i].TimeStamp.getTime())) {
-      console.log("This date is invalid!");
+
+    if (!(data[i].TimeStamp instanceof Date) || isNaN(data[i].TimeStamp.getTime())) {
+      console.error("This date is invalid!");
+      return;
     }
 
     // csv[i] is number ... check that value is between ("0" and "9") or "."
@@ -106,8 +108,17 @@ function csvValidate(data: RowData[]) {
     }
 
     // if csv[i] is string... I don't know? check for quotes???
-    if (typeof data[i].Name !== 'string' || typeof data[i].ItemID !== 'string' || typeof data[i].Desc !== 'string') {
-      console.error("Name, ItemID, Desc must be valid strings");
+    let nameVal = data[i].Name;
+    let itemIDVal = data[i].ItemID;
+    let descVal = data[i].Desc;
+    if (typeof nameVal !== 'string' || typeof itemIDVal !== 'string' || typeof descVal !== 'string' ||
+      nameVal.trim() === '' || itemIDVal.trim() === '' || descVal.trim() === '') {
+      console.error("Name, ItemID, Desc must be valid strings (cannot be empty)");
+      return;
+    }
+
+    if (/^\d+$/.test(nameVal.trim()) || /^\d+$/.test(itemIDVal.trim()) || /^\d+$/.test(descVal.trim())) {
+      console.error("Name, ItemID, Desc cannot contain only numbers");
       return;
     }
   }
