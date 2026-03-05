@@ -101,6 +101,13 @@ function csvValidate(data: RowData[]) {
       return;
     }
 
+    const timeStampFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+    let timestampStr = data[i].TimeStamp.toISOString();
+    if (!timeStampFormat.test(timestampStr)) {
+      console.error("Timestamp format incorrect");
+      return;
+    }
+
     // csv[i] is number ... check that value is between ("0" and "9") or "."
     if (Number.isNaN(data[i].Price) || Number.isNaN(data[i].Sold) || Number.isNaN(data[i].Revenue)) {
       console.error("Price, Number Sold, and Revenue must be valid numbers.");
