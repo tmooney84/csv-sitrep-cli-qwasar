@@ -61,11 +61,8 @@ function csvSummary(data: RowData[]) {
     console.log("Row Average Order Value: ", averageOrderValue);
     console.log("Top 3 Products by Revenue: ", data.sort((a, b) => b.Revenue - a.Revenue).slice(0, 3));
   }
-  catch {
-
-  }
-  finally {
-
+  catch (e) {
+    console.error('csvSummary function failed.', e);
   }
 }
 
@@ -74,14 +71,71 @@ function csvSummary(data: RowData[]) {
 // “Widget 1”, “UD45643”, “Blah Blah”,  49.99, 	   10, 	               499.90
 
 function csvValidate(data: RowData[]) {
+  // check if 8 csv values
+  const isAnyNull = Object.values(data).some(value => value === null || value === undefined || value === "");
+  console.log(isAnyNull);
 
+  if (isAnyNull) {
+    console.error("Found a missing value!");
+    return;
+  }
+
+  // csv[0] check that it starts with "UID-" and next 3 have to be between ("0" and "9")
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].OrderID.startsWith("UID-")) {
+      const idPart = data[i].OrderID.slice(4); // Get the part after "UID-"
+      if (idPart.length !== 3) {
+        console.error("Invalid UID format");
+        return;
+      }
+      for (let j = 0; j < idPart.length; j++) {
+        if (idPart[j] < '0' || idPart[j] > '9') {
+          console.error("Invalid UID format");
+          return;
+        }
+      }
+    }
+    if (isNaN(data[i].TimeStamp.getTime())) {
+      console.log("This date is invalid!");
+    }
+
+    // csv[i] is number ... check that value is between ("0" and "9") or "."
+    if (Number.isNaN(data[i].Price) || Number.isNaN(data[i].Sold) || Number.isNaN(data[i].Revenue)) {
+      console.error("Price, Number Sold, and Revenue must be valid numbers.");
+      return;
+    }
+
+    // if csv[i] is string... I don't know? check for quotes???
+    if (typeof data[i].Name !== 'string' || typeof data[i].ItemID !== 'string' || typeof data[i].Desc !== 'string') {
+      console.error("Name, ItemID, Desc must be valid strings");
+      return;
+    }
+  }
+  
 }
 
 // csv-sitrep report <file.csv> --out report.json 
 // writes JSON report to disk CSV to JSON
 
-function buildReport(data: RowData[]) {
+async function buildReport(data: RowData[]) {
+  // convert to json
 
+  const jsonReport = JSON.stringify(data, null, 2);
+
+  const rll = readline.createInterface({ input, output });
+  // get user to type in name for json
+  const jsonName = await rll.question('Enter desired name for json file: <name>.json: ');
+  const jsonfileName = jsonName + ".json";
+  console.log(jsonfileName); // save json to .json file
+  fs.writeFile(jsonfileName, jsonReport, (err) => {
+    if (err) {
+      console.error('Error writing JSON file: ', err);
+    } else {
+      console.log('JSON report successfully saved as ', jsonfileName);
+    }
+  });
+
+  rll.close()
 }
 
 async function runCli() {
@@ -94,7 +148,7 @@ async function runCli() {
 
   try {
     data = await csvConverter(fileName);
-    console.log('Parsed List:', data);
+    //console.log('Parsed List:', data);
   } catch (err) {
     console.error('CSV file conversion failed.', err);
   }
@@ -108,28 +162,28 @@ async function runCli() {
   3: Build Report
   exit: Close Program`);
 
-        const answer = await rl.question('\nSelection: ');
-        const choice = answer.trim().toLowerCase();
+    const answer = await rl.question('\nSelection: ');
+    const choice = answer.trim().toLowerCase();
 
-        switch(choice){
-          case "1":
-            csvSummary(data);
-            console.log("running csvSummary");
-            break;
-          case "2":
-            csvValidate(data);
-            console.log("running csvValidate");
-            break;
-          case "3":
-            buildReport(data);
-            console.log("running buildReport");
-            break;
-          case "exit":
-            keepRunning = false;
-            break;
-          default:
-            console.log("Invalid option. Please try again.");
-        }
+    switch (choice) {
+      case "1":
+        console.log("running csvSummary...");
+        csvSummary(data);
+        break;
+      case "2":
+        console.log("running csvValidate...");
+        csvValidate(data);
+        break;
+      case "3":
+        console.log("running buildReport...");
+        await buildReport(data);
+        break;
+      case "exit":
+        keepRunning = false;
+        break;
+      default:
+        console.log("Invalid option. Please try again.");
+    }
   }
 
   console.log("Goodbye!");
