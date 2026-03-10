@@ -28,7 +28,7 @@ Options:
 
 3) Report- This function converts a CSV to JSON and writes the JSON-formatted information to file.
 
-exit) Exit- should cleanly close the program, otherwise the menu should run in a continuous loop.
+exit. Exit- should cleanly close the program, otherwise the menu should run in a continuous loop.
 
 csv-sitrep-cli is written in Typescript using an object-orientd approach and runs on NodeJS.
 
