@@ -171,26 +171,21 @@ async function buildReport(data: RowData[], rl: readline.Interface) {
 
   return;
 }
-
 async function runCli() {
   let data: RowData[] = [];
+  let currentFileName: string = "";
   const rl = readline.createInterface({ input, output });
 
   console.log('\x1b[36m--- CSV-TO-JSON-REPORTS APPLICATION ---\x1b[0m');
 
-  const fileName = await rl.question('Enter CSV filename: ');
-
-  try {
-    data = await csvConverter(fileName);
-    //console.log('Parsed List:', data);
-  } catch (err) {
-    console.error('CSV file conversion failed.', err);
-  }
-
   let keepRunning: boolean = true;
 
   while (keepRunning) {
-    console.log(`\nOptions: 
+    // Show current file status
+    const status = currentFileName ? `Active File: ${currentFileName}` : "No file loaded";
+    console.log(`\n--- ${status} ---`);
+    console.log(`Options: 
+  0: Load/Change CSV File
   1: Summary
   2: Validate
   3: Build Report
@@ -199,29 +194,50 @@ async function runCli() {
     const answer = await rl.question('\nSelection: ');
     const choice = answer.trim().toLowerCase();
 
+    // Guard clause: If they try to process data before loading a file
+    if (["1", "2", "3"].includes(choice) && data.length === 0) {
+      console.log("\x1b[31mError: No data loaded. Please select option '0' first.\x1b[0m");
+      continue;
+    }
+
     switch (choice) {
+      case "0":
+        const fileName = await rl.question('Enter CSV filename: ');
+        try {
+          const newData = await csvConverter(fileName);
+          data = newData;
+          currentFileName = fileName;
+          console.log(`\x1b[32mSuccessfully loaded ${data.length} rows from ${fileName}\x1b[0m`);
+        } catch (err) {
+          console.error('\x1b[31mCSV file conversion failed. Check the filename and try again.\x1b[0m');
+        }
+        break;
+
       case "1":
-        console.log("running csvSummary...");
+        console.log("Running csvSummary...");
         csvSummary(data);
         break;
+
       case "2":
-        console.log("running csvValidate...");
+        console.log("Running csvValidate...");
         csvValidate(data);
         break;
+
       case "3":
-        console.log("running buildReport...");
+        console.log("Running buildReport...");
         await buildReport(data, rl);
         break;
+
       case "exit":
         keepRunning = false;
         break;
+
       default:
         console.log("Invalid option. Please try again.");
     }
   }
 
   console.log("Goodbye!");
-
   rl.close();
 }
 
