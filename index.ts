@@ -1,7 +1,8 @@
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import csvParser from 'csv-parser';
-import fs from 'fs';
+import { writeFile } from 'node:fs/promises';
+import fs from 'node:fs';
 
 // Name,ID,Desc,Price,Number Sold,Revenue
 // "Vortex-X Axial Fan","VX-990","High-flow cooling unit",89.50,12,1074.00
@@ -71,13 +72,23 @@ function csvSummary(data: RowData[]) {
 // “Widget 1”, “UD45643”, “Blah Blah”,  49.99, 	   10, 	               499.90
 
 function csvValidate(data: RowData[]) {
-  // check if 8 csv values
+  let invalidData: boolean = false;
+  
   data.forEach((row, index) => {
-      const isAnyNull = Object.values(row).some(value => value === null || value === undefined || value === "");
-      if (isAnyNull) {
-        console.error("Found a missing value at index " + index + "!");
-        return;
-      }
+    // index starts at 0, data starts after header, so physical row = index + 2
+    const fileRowNumber = index + 2; 
+
+    const isAnyNull = Object.values(row).some(
+      value => value === null || value === undefined || value === ""
+    );
+
+    if (isAnyNull) {
+      console.error(`Validation Error: Missing value found on CSV row ${fileRowNumber} at column ${index}`);
+      // Note: return here only exits the current iteration, not the whole function
+      invalidData = true;
+    }
+    
+    // ... rest of your validation logic using fileRowNumber
   });
 
   // csv[0] check that it starts with "UID-" and next 3 have to be between ("0" and "9")
@@ -85,33 +96,34 @@ function csvValidate(data: RowData[]) {
     if (data[i].OrderID.startsWith("UID-")) {
       const idPart = data[i].OrderID.slice(4); // Get the part after "UID-"
       if (idPart.length !== 3) {
-        console.error("Invalid UID format");
-        return;
+        console.error("Validation Error: Invalid UID format");
+        invalidData = true;
       }
       for (let j = 0; j < idPart.length; j++) {
         if (idPart[j] < '0' || idPart[j] > '9') {
-          console.error("Invalid UID format");
-          return;
+          console.error("Validation Error: Invalid UID format");
+          invalidData = true;
         }
       }
     }
 
     if (!(data[i].TimeStamp instanceof Date) || isNaN(data[i].TimeStamp.getTime())) {
-      console.error("This date is invalid!");
-      return;
+      console.error(`Validation Error: The date format is invalid for row ${i}`);
+      invalidData = true;
     }
 
-    const timeStampFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+    // The (\.\d{3})? makes the decimal and three digits for milliseconds optional
+    const timeStampFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;  
     let timestampStr = data[i].TimeStamp.toISOString();
     if (!timeStampFormat.test(timestampStr)) {
-      console.error("Timestamp format incorrect");
-      return;
+      console.error(`Validation Error: Timestamp format is invalid for row ${i}`);
+      invalidData = true; 
     }
 
     // csv[i] is number ... check that value is between ("0" and "9") or "."
     if (Number.isNaN(data[i].Price) || Number.isNaN(data[i].Sold) || Number.isNaN(data[i].Revenue)) {
-      console.error("Price, Number Sold, and Revenue must be valid numbers.");
-      return;
+      console.error(`Validation Error: Price, Number Sold, and Revenue must be valid numbers in row ${i}.`);
+      invalidData = true;
     }
 
     // if csv[i] is string... I don't know? check for quotes???
@@ -120,40 +132,44 @@ function csvValidate(data: RowData[]) {
     let descVal = data[i].Desc;
     if (typeof nameVal !== 'string' || typeof itemIDVal !== 'string' || typeof descVal !== 'string' ||
       nameVal.trim() === '' || itemIDVal.trim() === '' || descVal.trim() === '') {
-      console.error("Name, ItemID, Desc must be valid strings (cannot be empty)");
-      return;
+      console.error(`Validation Error: Name, ItemID, Desc must be valid strings (cannot be empty) in row ${i}`);
+      invalidData = true;
     }
 
     if (/^\d+$/.test(nameVal.trim()) || /^\d+$/.test(itemIDVal.trim()) || /^\d+$/.test(descVal.trim())) {
-      console.error("Name, ItemID, Desc cannot contain only numbers");
-      return;
+      console.error(`Validation Error: Name, ItemID, Desc cannot contain only numbers in row ${i}`);
+      invalidData = true;
     }
   }
-  
+
+  if(invalidData === false){
+    console.log("CSV file format is VALID");
+  }
+  else{
+    console.log("CSV file format is INVALID");
+  }
 }
 
 // csv-sitrep report <file.csv> --out report.json 
 // writes JSON report to disk CSV to JSON
 
-async function buildReport(data: RowData[]) {
+async function buildReport(data: RowData[], rl: readline.Interface) {
   // convert to json
-
   const jsonReport = JSON.stringify(data, null, 2);
 
-  const rll = readline.createInterface({ input, output });
   // get user to type in name for json
-  const jsonName = await rll.question('Enter desired name for json file: <name>.json: ');
+  const jsonName = await rl.question('Enter desired name for json file: <name>.json: ');
   const jsonfileName = jsonName + ".json";
   console.log(jsonfileName); // save json to .json file
-  fs.writeFile(jsonfileName, jsonReport, (err) => {
-    if (err) {
-      console.error('Error writing JSON file: ', err);
-    } else {
-      console.log('JSON report successfully saved as ', jsonfileName);
-    }
-  });
+ 
+  try{
+    await writeFile(jsonfileName, jsonReport);
+    console.log('JSON report successfully saved as ', jsonfileName)
+  } catch(err){
+    console.error('Error writing JSON file: ', err);
+  }
 
-  rll.close()
+  return;
 }
 
 async function runCli() {
@@ -194,7 +210,7 @@ async function runCli() {
         break;
       case "3":
         console.log("running buildReport...");
-        await buildReport(data);
+        await buildReport(data, rl);
         break;
       case "exit":
         keepRunning = false;
