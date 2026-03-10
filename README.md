@@ -56,7 +56,7 @@ sh setup-dev-env.sh
 To Use:
 
 ```bash
-npx ts-node index.ts    <<< !!! does index.ts need to have a name change???
+npx ts-node cli_csv_json.ts 
 ```
 
 Follow the options within the program's menu to use the Summary, Validate and Report functionality.

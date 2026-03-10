@@ -43,7 +43,7 @@ fi
 echo "Setup complete!"
 echo ""
 echo "To run TypeScript directly:"
-echo "  npx ts-node index.ts"
+echo "  npx ts-node cli_csv_json.ts"
 echo ""
 echo "To compile:"
 echo "  npx tsc"
