@@ -5,7 +5,21 @@
 This README describes a Command-Line Interface (CLI) program named csv-sitrep-cli whose functionality is currently broken and needs to be fixed in order to match the stated functionality. The candidate is tasked with writing a situation report (sitrep) describing what is broken, why, and what the minimum viable path to fix the issue and restore functionality. Optionally the student can solve the issues, but scoring will be based primarily on the quality of diagnosis.
 
 ## Desciption
-csv-sitrep-cli is designed to manipulate comma-separated value files through three separate functionalities:
+csv-sitrep-cli is designed to manipulate comma-separated value files through three separate functionalities. When starting the program, the user should be met with the prompt:
+
+```bash
+--- CSV-TO-JSON-REPORTS APPLICATION ---
+
+--- No file loaded ---
+Options: 
+  0: Load/Change CSV File
+  1: Summary
+  2: Validate
+  3: Build Report
+  exit: Close Program
+```
+
+0) Load/Change CSV File- Prompts the user to enter the name of the CSV file that is to be processed.
 
 1) Summary- This function prints total row count, total revenue, average order value, and top 3 products based on total revenue.
 
@@ -13,6 +27,8 @@ csv-sitrep-cli is designed to manipulate comma-separated value files through thr
 
 
 3) Report- This function converts a CSV to JSON and writes the JSON-formatted information to file.
+
+exit) Exit- should cleanly close the program, otherwise the menu should run in a continuous loop.
 
 csv-sitrep-cli is written in Typescript using an object-orientd approach and runs on NodeJS.
 
